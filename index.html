@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi Bomber</title>
+    <style>
+        /* === BASIC RESET === */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body {
+            background: #0f172a;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* === MAIN CARD === */
+        .card {
+            background: #1e293b;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+        }
+
+        /* === HEADER === */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #38bdf8; /* Sky Blue */
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            color: #fbbf24; /* Yellow */
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* === FORM INPUTS === */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            border-color: #38bdf8;
+        }
+
+        /* === BUTTON === */
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: #22c55e; /* Solid Green */
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            text-transform: uppercase;
+            transition: background 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: #16a34a;
+        }
+
+        .submit-btn:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+
+        /* === STATUS MESSAGE (Below Button) === */
+        .status-msg {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #ef4444; /* Red color */
+            display: none; /* Hidden by default */
+        }
+
+        /* === FOOTER === */
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            border-top: 1px solid #334155;
+            padding-top: 20px;
+        }
+
+        .footer a {
+            color: #22c55e;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Card -->
+    <div class="card">
+        <div class="header">
+            <h1>Multi Bomber</h1>
+            <p>Developed by Ramzan Ahsan</p>
+        </div>
+
+        <form id="bombForm">
+            <div class="form-group">
+                <label>Phone Number (03XXXXXXXXX)</label>
+                <input type="tel" id="number" placeholder="03001234567" required maxlength="11" minlength="11">
+            </div>
+
+            <div class="form-group">
+                <label>Count (Default: 2)</label>
+                <input type="number" id="count" value="2" min="1" max="50" required>
+            </div>
+
+            <div class="form-group">
+                <label>Select Method</label>
+                <!-- Values are exactly lowercase for API -->
+                <select id="method" required>
+                    <option value="sms">SMS</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="ivr">Call (IVR)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">Trigger Now</button>
+            
+            <!-- Red Success/Error Message Box -->
+            <div class="status-msg" id="statusMsg">Bomber Successfully Triggered</div>
+        </form>
+
+        <div class="footer">
+            <a href="https://chat.whatsapp.com/JOSfmSDDVZhG0RK0SHbNj1?s=cl&p=a&iam=2" target="_blank">Join WhatsApp Group</a>
+        </div>
+    </div>
+
+    <!-- Javascript -->
+    <script>
+        const form = document.getElementById('bombForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMsg = document.getElementById('statusMsg');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault(); // Rokna page reload hone se
+
+            let number = document.getElementById('number').value;
+            let count = document.getElementById('count').value;
+            let method = document.getElementById('method').value; // sms, whatsapp, ivr
+
+            // Hide message if previously shown
+            statusMsg.style.display = "none";
+
+            // Validate number
+            if (number.length !== 11 || !number.startsWith('03')) {
+                statusMsg.innerText = "Invalid Number! Use 03XXXXXXXXX";
+                statusMsg.style.display = "block";
+                return;
+            }
+
+            // Remove first '0' to send 10 digits to API (03xxx -> 3xxx)
+            let apiNumber = number.substring(1);
+
+            // Loading state
+            submitBtn.innerText = "Processing...";
+            submitBtn.disabled = true;
+
+            // API URL
+            let url = `https://multibombapi-puce.vercel.app/bomb?number=${apiNumber}&count=${count}&method=${method}`;
+
+            try {
+                let response = await fetch(url);
+                let data = await response.json();
+
+                // Show Success Message in Red
+                if (data.status === "success" || data.status === "queued") {
+                    statusMsg.innerText = "Bomber Successfully Triggered";
+                    statusMsg.style.display = "block";
+                } else {
+                    statusMsg.innerText = "Failed: " + (data.error || "Unknown Error");
+                    statusMsg.style.display = "block";
+                }
+            } catch (error) {
+                // Show Network Error in Red
+                statusMsg.innerText = "Network Error! API Connection Failed.";
+                statusMsg.style.display = "block";
+            } finally {
+                // Reset Button
+                submitBtn.innerText = "Trigger Now";
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
